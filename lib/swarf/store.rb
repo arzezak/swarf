@@ -20,28 +20,46 @@ module Swarf
     end
 
     def read
-      JSON.parse(File.read(path))
-    rescue Errno::ENOENT, JSON::ParserError
+      parse(File.read(path))
+    rescue Errno::ENOENT
       {}
     end
 
-    # Merges one Coverage result into whatever previous runs left behind, then writes.
+    # Merges one Coverage result into whatever previous runs left behind.
+    #
+    # Rails parallelises by forking, so a dozen processes can reach this at once, each
+    # holding a slice of the same suite. The whole read-merge-write is therefore done
+    # under an exclusive lock; without it the last writer wins and the rest is lost.
     def record(result)
-      merged = read
-      normalize(result).each do |file, fresh|
-        previous = merged[file]
-        merged[file] = previous && previous["sha"] == fresh["sha"] ? combine(previous, fresh) : fresh
+      fresh = normalize(result)
+      return if fresh.empty?
+
+      FileUtils.mkdir_p(@dir)
+      File.open(path, File::RDWR | File::CREAT, 0o644) do |file|
+        file.flock(File::LOCK_EX)
+        merged = merge(parse(file.read), fresh)
+        file.rewind
+        file.write(JSON.pretty_generate(merged))
+        file.truncate(file.pos)
       end
-      write(merged)
     end
 
     private
 
     def path = File.join(@dir, FILENAME)
 
-    def write(data)
-      FileUtils.mkdir_p(@dir)
-      File.write(path, JSON.pretty_generate(data))
+    def parse(json)
+      JSON.parse(json)
+    rescue JSON::ParserError
+      {}
+    end
+
+    def merge(merged, fresh)
+      fresh.each do |file, entry|
+        previous = merged[file]
+        merged[file] = previous && previous["sha"] == entry["sha"] ? combine(previous, entry) : entry
+      end
+      merged
     end
 
     def normalize(result)

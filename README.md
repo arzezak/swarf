@@ -80,6 +80,30 @@ Load the probe **before anything else** in your test runs.
 require "swarf/probe"
 ```
 
+**Minitest via Rake** — in the `Rakefile`. `test_prelude` runs before the tests load:
+
+```ruby
+Minitest::TestTask.create do |t|
+  t.test_prelude = 'require "swarf/probe"'
+end
+```
+
+**Rails** — in `test/test_helper.rb`, above `config/environment`, or the whole app loads
+before the probe does and none of it is measured:
+
+```ruby
+ENV["RAILS_ENV"] ||= "test"
+
+require "bundler/setup"
+require "swarf/probe"
+
+require_relative "../config/environment"
+```
+
+`bundler/setup` is only what `config/boot` would do anyway; the probe needs it to find the
+gem this early. Rails parallelises tests by forking, which swarf handles — every worker
+merges into the store under a lock.
+
 **Anything else** — set it on the command line, no files to edit:
 
 ```
@@ -220,7 +244,6 @@ split it. Ranking is enough; capping complexity is RuboCop's job.
   inner method's lines and branches.
 - Methods inside `class << self` are named correctly; methods defined by `instance_eval` or
   a reopened singleton via a variable are not.
-- No file locking, so parallel test processes writing at once can lose a partial result.
 - No ignore patterns for generated code, config or migrations.
 
 ## Development

@@ -73,6 +73,23 @@ class StoreTest < Minitest::Test
     assert_equal [0, 0, nil, nil], entry["lines"]
   end
 
+  # Rails parallelises tests by forking, so a dozen processes can finish at once and each
+  # merges into the same file. Without locking they overwrite each other's records.
+  def test_concurrent_writers_do_not_lose_each_others_records
+    files = Array.new(8) { |i| File.join(@root, "lib", "f#{i}.rb").tap { |f| File.write(f, "def m; end\n") } }
+    start = Time.now + 0.3
+    pids = files.map do |file|
+      fork do
+        sleep([start - Time.now, 0].max)
+        @store.record({ file => { lines: [1] } })
+        exit!(0)
+      end
+    end
+    pids.each { |pid| Process.wait(pid) }
+
+    assert_equal files.sort, @store.read.keys.reject { |k| k.end_with?("cart.rb") }.sort
+  end
+
   def test_it_survives_a_round_trip_through_disk
     @store.record(raw(lines: [1, nil]))
 
