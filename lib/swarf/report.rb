@@ -3,27 +3,38 @@
 module Swarf
   # A fixed-width table, worst first.
   class Report
-    HEADINGS = ["Method", "CC", "Cov%", "CRAP", "Evidence"].freeze
+    HEADINGS = ["Method", "CC", "Cov%", "CRAP", "Evidence", "Location"].freeze
 
-    def initialize(scores)
+    # A whole project reports hundreds of methods and only the head of that list is worth
+    # anyone's attention — an agent's context least of all.
+    DEFAULT_LIMIT = 20
+
+    def initialize(scores, limit: DEFAULT_LIMIT)
       @scores = scores.sort_by { |score| -score.crap }
+      @limit = limit
+      @shown = limit.zero? ? @scores : @scores.first(limit)
     end
 
     def to_s
       return "No methods found.\n" if @scores.empty?
 
       widths = column_widths
-      [heading(widths), divider(widths), *@scores.map { |score| line(cells(score), widths) }]
-        .join("\n") + "\n"
+      lines = [heading(widths), divider(widths), *@shown.map { |score| line(cells(score), widths) }]
+      lines << footer if held_back.positive?
+      "#{lines.join("\n")}\n"
     end
 
     private
 
-    def rows = @scores.map { |score| cells(score) }
+    def held_back = @scores.size - @shown.size
+
+    def footer = "\n… #{held_back} more (--limit 0 for all)"
+
+    def rows = @shown.map { |score| cells(score) }
 
     def cells(score)
       [score.name, score.cc.to_s, percentage(score.coverage), format("%.2f", score.crap),
-       score.evidence.to_s]
+       score.evidence.to_s, score.location.to_s]
     end
 
     def percentage(coverage) = coverage.nil? ? "—" : format("%.1f%%", coverage * 100)
@@ -36,10 +47,10 @@ module Swarf
 
     def divider(widths) = widths.sum { |width| width + 2 }.then { |total| "-" * (total - 2) }
 
-    # Only the method name is left-aligned; numbers read better flush right.
+    # The name and the location are left-aligned; numbers read better flush right.
     def line(cells, widths)
       cells.each_with_index.map do |cell, index|
-        index.zero? ? cell.ljust(widths[index]) : cell.rjust(widths[index])
+        index.zero? || index == cells.size - 1 ? cell.ljust(widths[index]) : cell.rjust(widths[index])
       end.join("  ").rstrip
     end
   end

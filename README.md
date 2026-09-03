@@ -5,12 +5,12 @@ Scores every Ruby method by how complex it is against how well your tests actual
 ```
 $ swarf lib/
 
-Method                       CC    Cov%   CRAP      Evidence
-------------------------------------------------------------
-Cart#checkout                 6    0.0%  42.00  never called
-Cart#discount                 4   50.0%   6.00        3/6 br
-Cart#shipping                 3   66.7%   3.33        2/3 br
-Cart#subtotal                 1  100.0%   1.00        1/1 ln
+Method          CC    Cov%   CRAP      Evidence  Location
+---------------------------------------------------------------------
+Cart#checkout    6    0.0%  42.00  never called  lib/cart.rb:31
+Cart#discount    4   50.0%   6.00        3/6 br  lib/cart.rb:24
+Cart#shipping    3   66.7%   3.33        2/3 br  lib/cart.rb:15
+Cart#subtotal    1  100.0%   1.00        1/1 ln  lib/cart.rb:11
 ```
 
 ## The metric
@@ -52,12 +52,12 @@ Complexity is parsed straight from your source, so this works immediately:
 ```
 $ bundle exec swarf lib/
 
-Method                    CC  Cov%   CRAP  Evidence
----------------------------------------------------
-Cart#checkout              6     —  42.00   no data
-Cart#discount              4     —  20.00   no data
-Cart#shipping              3     —  12.00   no data
-Cart#subtotal              1     —   2.00   no data
+Method          CC  Cov%   CRAP  Evidence  Location
+---------------------------------------------------------
+Cart#checkout    6     —  42.00   no data  lib/cart.rb:31
+Cart#discount    4     —  20.00   no data  lib/cart.rb:24
+Cart#shipping    3     —  12.00   no data  lib/cart.rb:15
+Cart#subtotal    1     —   2.00   no data  lib/cart.rb:11
 ```
 
 `no data` means no test run has been recorded yet, so every method reports `CC² + CC`.
@@ -126,12 +126,12 @@ Then ignore the store:
 $ bundle exec rspec
 $ bundle exec swarf lib/
 
-Method                    CC    Cov%   CRAP      Evidence
-----------------------------------------------------------
-Cart#checkout              6    0.0%  42.00  never called
-Cart#discount              4   50.0%   6.00        3/6 br
-Cart#shipping              3   66.7%   3.33        2/3 br
-Cart#subtotal              1  100.0%   1.00        1/1 ln
+Method          CC    Cov%   CRAP      Evidence  Location
+---------------------------------------------------------------------
+Cart#checkout    6    0.0%  42.00  never called  lib/cart.rb:31
+Cart#discount    4   50.0%   6.00        3/6 br  lib/cart.rb:24
+Cart#shipping    3   66.7%   3.33        2/3 br  lib/cart.rb:15
+Cart#subtotal    1  100.0%   1.00        1/1 ln  lib/cart.rb:11
 ```
 
 Every run merges into `.swarf/coverage.json`, so partial runs are fine — running one spec
@@ -164,9 +164,15 @@ Both `no data` and `stale` fall back to the `CRAP = CC² + CC` floor rather than
 $ swarf                       # the whole project
 $ swarf lib/ app/             # directories, recursively
 $ swarf lib/app/cart.rb       # a single file
+$ swarf --limit 50            # show 50 rows instead of 20
+$ swarf --limit 0             # show everything
 $ swarf --version
 $ swarf --help
 ```
+
+Only the worst 20 rows print by default, with a count of what was held back. A 245-file
+project reports 344 methods, and the tail of that list is all `CRAP 1.00` — noise that
+buries the handful of rows worth acting on.
 
 Directories are searched for `**/*.rb`, skipping `test/`, `spec/`, `vendor/`, `tmp/` and
 `node_modules/`. Naming one of those directly still scores it.

@@ -16,6 +16,20 @@ class AcceptanceTest < Minitest::Test
     assert_operator output.index("Cart#shipping"), :<, output.index("Cart#subtotal")
   end
 
+  def test_every_row_names_a_file_and_line_an_agent_can_open
+    output = swarf("test/fixtures/cart.rb")
+
+    assert_match(%r{Cart#shipping.*test/fixtures/cart\.rb:8}, output)
+  end
+
+  def test_the_row_limit_is_configurable
+    output = swarf("--limit", "1", "test/fixtures/cart.rb")
+
+    assert_match(/Cart#shipping/, output)
+    refute_match(/Cart#subtotal/, output)
+    assert_match(/1 more/, output)
+  end
+
   def test_it_scores_against_coverage_a_real_run_recorded
     dir = File.realpath(Dir.mktmpdir)
     File.write(File.join(dir, "cart.rb"), <<~RUBY)

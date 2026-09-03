@@ -26,17 +26,46 @@ class ReportTest < Minitest::Test
     assert_match(/never called/, render([row("Cart#x", cc: 1, coverage: 0.0, evidence: "never called")]))
   end
 
+  # An agent reading `Cart#checkout` has to grep for it before it can act. Naming the
+  # file and line makes every row directly openable.
+  def test_each_row_names_the_file_and_line_the_method_starts_on
+    assert_match(%r{app/cart\.rb:42}, render([row("Cart#shipping", cc: 3, location: "app/cart.rb:42")]))
+  end
+
+  # A 245-file project reports 344 methods. Handing an agent all of them buries the few
+  # that matter and burns the context it needs to fix them.
+  def test_it_shows_only_the_worst_rows_by_default
+    scores = Array.new(30) { |i| row("Cart#m#{i}", cc: i + 1) }
+
+    assert_equal 20, render(scores).lines.count { |line| line.start_with?("Cart#") }
+  end
+
+  def test_it_says_how_many_rows_it_held_back
+    assert_match(/10 more/, render(Array.new(30) { |i| row("Cart#m#{i}", cc: i + 1) }))
+  end
+
+  def test_a_limit_of_zero_shows_everything
+    scores = Array.new(30) { |i| row("Cart#m#{i}", cc: i + 1) }
+
+    assert_equal 30, render(scores, limit: 0).lines.count { |line| line.start_with?("Cart#") }
+  end
+
+  def test_nothing_is_held_back_when_everything_fits
+    refute_match(/more/, render([row("Cart#shipping", cc: 3)]))
+  end
+
   def test_an_empty_run_says_so_instead_of_printing_a_bare_header
     assert_match(/no methods found/i, render([]))
   end
 
   private
 
-  def row(name, cc:, coverage: nil, evidence: "no data")
-    Swarf::Score.new(name: name, cc: cc, coverage: coverage, evidence: evidence)
+  def row(name, cc:, coverage: nil, evidence: "no data", location: "app/cart.rb:1")
+    Swarf::Score.new(name: name, cc: cc, coverage: coverage, evidence: evidence,
+                     location: location)
   end
 
-  def render(scores)
-    Swarf::Report.new(scores).to_s
+  def render(scores, limit: Swarf::Report::DEFAULT_LIMIT)
+    Swarf::Report.new(scores, limit: limit).to_s
   end
 end
