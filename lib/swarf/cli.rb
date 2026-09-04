@@ -14,6 +14,8 @@ module Swarf
 
     def initialize(argv)
       @limit = Report::DEFAULT_LIMIT
+      @extra_ignore = []
+      @all = false
       @paths = parse(argv)
     end
 
@@ -26,13 +28,19 @@ module Swarf
 
     def scores
       coverage = CoverageMap.new(Store.new.read)
-      Sources.collect(@paths).flat_map do |path|
+      Sources.collect(@paths, ignore: ignore).flat_map do |path|
         Complexity.analyze(File.read(path), path: path).map do |method|
           found = coverage.for(method)
           Score.new(name: method.name, cc: method.cc, coverage: found.coverage,
                     evidence: found.evidence, location: locate(method))
         end
       end
+    end
+
+    def ignore
+      return [] if @all
+
+      Sources::DEFAULT_IGNORE + Sources.ignore_file + @extra_ignore
     end
 
     # Relative to where you ran swarf, so the row can be pasted straight into an editor.
@@ -45,6 +53,12 @@ module Swarf
         opts.banner = "Usage: swarf [options] [paths]"
         opts.on("-n", "--limit N", Integer, "Rows to show (0 for all, default #{Report::DEFAULT_LIMIT})") do |n|
           @limit = n
+        end
+        opts.on("-i", "--ignore GLOB", "Skip paths matching GLOB (repeatable)") do |glob|
+          @extra_ignore << glob
+        end
+        opts.on("-a", "--all", "Score everything, including #{Sources::IGNORE_FILE} and the defaults") do
+          @all = true
         end
         opts.on("-v", "--version", "Print the version and exit") do
           puts VERSION

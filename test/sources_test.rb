@@ -35,10 +35,67 @@ class SourcesTest < Minitest::Test
     assert_equal [path("lib/cart.rb")], collect(@dir)
   end
 
+  # Migrations are generated, run once, and never tested. On a well-tested app they are
+  # the only untested code left, so they take over the top of the report.
+  def test_migrations_and_schema_are_skipped
+    write("app/cart.rb")
+    write("db/migrate/20260101_create_carts.rb")
+    write("db/schema.rb")
+
+    assert_equal [path("app/cart.rb")], collect(@dir)
+  end
+
+  def test_a_vendor_directory_is_caught_at_any_depth
+    write("lib/cart.rb")
+    write("lib/deep/vendor/gem.rb")
+
+    assert_equal [path("lib/cart.rb")], collect(@dir)
+  end
+
   def test_an_explicit_test_file_is_still_honoured
     write("test/cart_test.rb")
 
     assert_equal [path("test/cart_test.rb")], collect(path("test/cart_test.rb"))
+  end
+
+  # Patterns match relative to the root being scanned, so naming a skipped directory makes
+  # its contents top-level and nothing can match them.
+  def test_an_explicit_directory_overrides_its_own_exclusion
+    write("db/migrate/20260101_create_carts.rb")
+
+    assert_equal [path("db/migrate/20260101_create_carts.rb")], collect(path("db/migrate"))
+  end
+
+  def test_extra_patterns_can_be_supplied
+    write("lib/cart.rb")
+    write("lib/generated/client.rb")
+
+    assert_equal [path("lib/cart.rb")], collect(@dir, ignore: Swarf::Sources::DEFAULT_IGNORE + ["lib/generated/**"])
+  end
+
+  def test_an_empty_pattern_list_scores_everything
+    write("lib/cart.rb")
+    write("db/migrate/20260101_create_carts.rb")
+
+    assert_equal 2, collect(@dir, ignore: []).size
+  end
+
+  def test_patterns_are_read_from_a_swarfignore_file
+    write("lib/cart.rb")
+    write("lib/legacy/old.rb")
+    File.write(path(".swarfignore"), "lib/legacy/**\n")
+
+    assert_equal ["lib/legacy/**"], Swarf::Sources.ignore_file(@dir)
+  end
+
+  def test_comments_and_blank_lines_in_swarfignore_are_ignored
+    File.write(path(".swarfignore"), "# generated\n\nlib/legacy/**\n  \n")
+
+    assert_equal ["lib/legacy/**"], Swarf::Sources.ignore_file(@dir)
+  end
+
+  def test_a_missing_swarfignore_is_simply_no_patterns
+    assert_empty Swarf::Sources.ignore_file(@dir)
   end
 
   def test_a_missing_path_is_reported_clearly
@@ -57,5 +114,7 @@ class SourcesTest < Minitest::Test
 
   def path(relative) = File.join(@dir, relative)
 
-  def collect(*paths) = Swarf::Sources.collect(paths)
+  def collect(*paths, ignore: Swarf::Sources::DEFAULT_IGNORE)
+    Swarf::Sources.collect(paths, ignore: ignore)
+  end
 end

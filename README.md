@@ -166,6 +166,8 @@ $ swarf lib/ app/             # directories, recursively
 $ swarf lib/app/cart.rb       # a single file
 $ swarf --limit 50            # show 50 rows instead of 20
 $ swarf --limit 0             # show everything
+$ swarf --ignore "app/legacy/**"   # skip a path (repeatable)
+$ swarf --all                 # score everything, ignoring nothing
 $ swarf --version
 $ swarf --help
 ```
@@ -173,6 +175,30 @@ $ swarf --help
 Only the worst 20 rows print by default, with a count of what was held back. A 245-file
 project reports 344 methods, and the tail of that list is all `CRAP 1.00` — noise that
 buries the handful of rows worth acting on.
+
+## What gets skipped
+
+```
+**/test/**  **/spec/**  **/features/**     where coverage comes from, not where risk is
+db/**                                      migrations and schema
+**/vendor/**  **/tmp/**  **/log/**  **/node_modules/**
+```
+
+Migrations matter more than they look. They are generated, run once and never tested, so
+on a well-tested codebase they are the only untested code left and they take over the top
+of the report — on a 20-file Rails app they ranked 3rd, 4th and 5th.
+
+Add your own in `.swarfignore` at the project root, one glob per line:
+
+```
+# generated
+lib/api/generated_client.rb
+app/legacy/**
+```
+
+Patterns match against each file's path relative to the directory being scanned, and both
+`*` and `**` cross directories. Naming a path on the command line always wins, so
+`swarf db/migrate` scores migrations even though `db/**` is a default.
 
 Directories are searched for `**/*.rb`, skipping `test/`, `spec/`, `vendor/`, `tmp/` and
 `node_modules/`. Naming one of those directly still scores it.
@@ -250,7 +276,6 @@ split it. Ranking is enough; capping complexity is RuboCop's job.
   inner method's lines and branches.
 - Methods inside `class << self` are named correctly; methods defined by `instance_eval` or
   a reopened singleton via a variable are not.
-- No ignore patterns for generated code, config or migrations.
 
 ## Development
 
