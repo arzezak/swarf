@@ -308,5 +308,6 @@ $ ruby -Ilib exe/swarf lib/
 
 1. Update the version in `lib/swarf/version.rb`
 2. Run `bundle install` to update the lockfile
-3. Commit: `git commit -am "Release vX.Y.Z"`
-4. Run `bundle exec rake release` (builds the gem, creates the git tag, pushes to RubyGems)
+3. Move the `Unreleased` entries in `CHANGELOG.md` under the new version and date
+4. Commit: `git commit -am "Release vX.Y.Z"`
+5. Run `bundle exec rake release` (builds the gem, creates the git tag, pushes to RubyGems)
