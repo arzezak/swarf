@@ -79,9 +79,9 @@ module Swarf
       end
 
       def qualify(node)
-        separator = (node.receiver || @singleton.positive?) ? "." : "#"
         return node.name.to_s if @scope.empty?
 
+        separator = (node.receiver || @singleton.positive?) ? "." : "#"
         "#{@scope.join("::")}#{separator}#{node.name}"
       end
 

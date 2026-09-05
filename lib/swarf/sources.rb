@@ -10,9 +10,9 @@ module Swarf
       "**/vendor/**", "**/tmp/**", "**/log/**", "**/node_modules/**"
     ].freeze
 
-    def self.collect(paths, ignore: DEFAULT_IGNORE)
-      paths = ["."] if paths.empty?
-      paths.flat_map { |path| expand(File.expand_path(path), ignore) }.uniq.sort
+    def self.collect(paths, ignore:)
+      patterns = ignore.flat_map { |pattern| variants(pattern) }
+      paths.flat_map { |path| expand(path, patterns) }.uniq.sort
     end
 
     def self.ignore_file(root = Dir.pwd)
@@ -22,19 +22,17 @@ module Swarf
       []
     end
 
-    def self.expand(path, ignore)
+    def self.expand(path, patterns)
       return [path] if File.file?(path)
       raise Error, "no such file or directory: #{path}" unless File.directory?(path)
 
       Dir.glob(File.join(path, "**", "*.rb"))
-        .reject { |file| ignored?(file.delete_prefix("#{path}/"), ignore) }
+        .reject { |file| ignored?(file.delete_prefix("#{path}/"), patterns) }
     end
 
-    def self.ignored?(relative, ignore)
-      ignore.any? do |pattern|
-        variants(pattern).any? do |variant|
-          File.fnmatch?(variant, relative, File::FNM_PATHNAME) || File.fnmatch?(variant, relative)
-        end
+    def self.ignored?(relative, patterns)
+      patterns.any? do |pattern|
+        File.fnmatch?(pattern, relative, File::FNM_PATHNAME) || File.fnmatch?(pattern, relative)
       end
     end
 

@@ -77,11 +77,7 @@ class ScanTest < Minitest::Test
 
   private
 
-  def write(relative, body)
-    full = File.join(@root, relative)
-    FileUtils.mkdir_p(File.dirname(full))
-    File.write(full, body)
-  end
+  def write(relative, body) = write_file(File.join(@root, relative), body)
 
   def record(relative, lines: [], branches: {}, methods: {})
     @store.record({File.join(@root, relative) => {lines: lines, branches: branches, methods: methods}})

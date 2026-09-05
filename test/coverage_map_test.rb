@@ -97,13 +97,9 @@ class CoverageMapTest < Minitest::Test
 
   def methods = Swarf::Complexity.analyze(File.read(source), path: source)
 
-  def measurement(lines: [], branches: {}, methods: {})
-    Swarf::Measurement.new(source, {"sha" => Digest::SHA256.file(source).hexdigest,
-                                    "lines" => lines, "branches" => branches, "methods" => methods})
-  end
+  def measurement(**recorded) = measurement_of(source, **recorded)
 
-  def result(name: nil, **recorded)
-    found = name ? methods.find { |m| m.name == name } : methods.first
-    Swarf::CoverageMap.new({source => measurement(**recorded)}).for(found)
+  def result(**recorded)
+    Swarf::CoverageMap.new({source => measurement(**recorded)}).for(methods.first)
   end
 end

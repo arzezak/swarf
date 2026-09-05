@@ -96,10 +96,7 @@ class StoreTest < Minitest::Test
 
   def source = File.join(@root, "lib", "cart.rb")
 
-  def write_source(body)
-    FileUtils.mkdir_p(File.dirname(source))
-    File.write(source, body)
-  end
+  def write_source(body) = write_file(source, body)
 
   def raw(lines: [], branches: {}, methods: {})
     {source => {lines: lines, branches: branches, methods: methods}}
@@ -107,7 +104,5 @@ class StoreTest < Minitest::Test
 
   def measurement = @store.read.fetch(source)
 
-  def stored
-    JSON.parse(File.read(File.join(@root, ".swarf", "coverage.json"))).fetch(source)
-  end
+  def stored = stored_coverage(@root).fetch(source)
 end

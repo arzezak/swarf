@@ -61,8 +61,5 @@ class MeasurementTest < Minitest::Test
 
   private
 
-  def measurement(lines: [], branches: {}, methods: {})
-    Swarf::Measurement.new(@path, {"sha" => Digest::SHA256.file(@path).hexdigest,
-                                   "lines" => lines, "branches" => branches, "methods" => methods})
-  end
+  def measurement(**recorded) = measurement_of(@path, **recorded)
 end

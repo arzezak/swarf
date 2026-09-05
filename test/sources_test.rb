@@ -101,11 +101,7 @@ class SourcesTest < Minitest::Test
 
   private
 
-  def write(relative)
-    full = path(relative)
-    FileUtils.mkdir_p(File.dirname(full))
-    File.write(full, "def noop; end\n")
-  end
+  def write(relative) = write_file(path(relative), "def noop; end\n")
 
   def path(relative) = File.join(@dir, relative)
 

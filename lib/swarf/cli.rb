@@ -5,7 +5,7 @@ require "optparse"
 module Swarf
   class CLI
     def self.run(argv, out: $stdout, err: $stderr)
-      new(argv).run(out, err)
+      new(argv).run(out)
     rescue Error => e
       err.puts("swarf: #{e.message}")
       1
@@ -18,7 +18,7 @@ module Swarf
       @paths = parse(argv)
     end
 
-    def run(out, _err)
+    def run(out)
       scores = Scan.new(paths: @paths, ignore: ignore).scores
       out.print Report.new(scores, limit: @limit).to_s
       0

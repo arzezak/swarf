@@ -13,10 +13,8 @@ class AcceptanceTest < Minitest::Test
 
   def test_migrations_are_left_out_by_default_but_all_brings_them_back
     dir = File.realpath(Dir.mktmpdir)
-    FileUtils.mkdir_p(File.join(dir, "db", "migrate"))
-    FileUtils.mkdir_p(File.join(dir, "app"))
-    File.write(File.join(dir, "app", "cart.rb"), "class Cart\n  def total = 1\nend\n")
-    File.write(File.join(dir, "db", "migrate", "20260101_create_carts.rb"),
+    write_file(File.join(dir, "app", "cart.rb"), "class Cart\n  def total = 1\nend\n")
+    write_file(File.join(dir, "db", "migrate", "20260101_create_carts.rb"),
       "class CreateCarts\n  def change = 1\nend\n")
 
     refute_match(/CreateCarts/, swarf(chdir: dir))
@@ -53,14 +51,10 @@ class AcceptanceTest < Minitest::Test
   private
 
   def probe(dir, script)
-    root = File.expand_path("..", __dir__)
-    IO.popen([{"SWARF_DIR" => File.join(dir, ".swarf")}, RbConfig.ruby, "-I#{root}/lib",
-      "-rswarf/probe", script], chdir: dir, err: %i[child out], &:read)
+    ruby("-rswarf/probe", script, chdir: dir, swarf_dir: File.join(dir, ".swarf"))
   end
 
-  def swarf(*args, chdir: nil, swarf_dir: Dir.mktmpdir)
-    root = File.expand_path("..", __dir__)
-    IO.popen([{"SWARF_DIR" => swarf_dir}, RbConfig.ruby, "-I#{root}/lib",
-      "#{root}/exe/swarf", *args], chdir: chdir || root, err: %i[child out], &:read)
+  def swarf(*args, chdir: ROOT, swarf_dir: Dir.mktmpdir)
+    ruby(File.join(ROOT, "exe", "swarf"), *args, chdir: chdir, swarf_dir: swarf_dir)
   end
 end

@@ -20,13 +20,19 @@ module Swarf
     end
 
     def branches(range)
-      @entry["branches"].filter_map do |branch, taken|
-        taken.values if range.cover?(branch.split(":")[2].to_i)
-      end.flatten
+      range.flat_map { |line| outcomes_by_line.fetch(line, []) }
     end
 
     def lines(range)
       range.filter_map { |line| @entry["lines"][line - 1] }
+    end
+
+    private
+
+    def outcomes_by_line
+      @outcomes_by_line ||= @entry["branches"].each_with_object({}) do |(branch, taken), by_line|
+        (by_line[branch.split(":")[2].to_i] ||= []).concat(taken.values)
+      end
     end
   end
 end

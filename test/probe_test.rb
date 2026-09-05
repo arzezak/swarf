@@ -24,7 +24,7 @@ class ProbeTest < Minitest::Test
   def test_running_code_under_the_probe_writes_a_coverage_file
     run_probed
 
-    assert_path_exists File.join(@root, ".swarf", "coverage.json")
+    assert_path_exists File.join(store_dir, "coverage.json")
   end
 
   def test_it_records_which_lines_ran
@@ -53,17 +53,15 @@ class ProbeTest < Minitest::Test
   end
 
   def test_it_loads_nothing_else_before_coverage_starts
-    lib = File.expand_path("../lib", __dir__)
-    output = IO.popen([{"SWARF_DIR" => File.join(@root, ".swarf")}, RbConfig.ruby, "-I#{lib}",
-      "-rswarf/probe", "-e", "puts Swarf.const_defined?(:Store)"],
-      chdir: @root, err: %i[child out], &:read)
+    output = ruby("-rswarf/probe", "-e", "puts Swarf.const_defined?(:Store)",
+      chdir: @root, swarf_dir: store_dir)
 
     assert_equal "false", output.strip
   end
 
   def test_it_warns_instead_of_raising_when_coverage_is_already_running
     File.write(File.join(@root, "other_tool.rb"), "require 'coverage'\nCoverage.start\n")
-    output = run_probed(prelude: ["-I#{@root}", "-rother_tool"])
+    output = run_probed("-I#{@root}", "-rother_tool")
 
     assert_match(/swarf.*already/i, output)
   end
@@ -72,13 +70,11 @@ class ProbeTest < Minitest::Test
 
   def script = File.join(@root, "script.rb")
 
-  def run_probed(prelude: [])
-    lib = File.expand_path("../lib", __dir__)
-    IO.popen([{"SWARF_DIR" => File.join(@root, ".swarf")}, RbConfig.ruby, "-I#{lib}",
-      *prelude, "-rswarf/probe", script], chdir: @root, err: %i[child out], &:read)
+  def store_dir = File.join(@root, ".swarf")
+
+  def run_probed(*prelude)
+    ruby(*prelude, "-rswarf/probe", script, chdir: @root, swarf_dir: store_dir)
   end
 
-  def coverage
-    JSON.parse(File.read(File.join(@root, ".swarf", "coverage.json"))).fetch(script)
-  end
+  def coverage = stored_coverage(@root).fetch(script)
 end

@@ -8,15 +8,15 @@ module Swarf
 
     def initialize(scores, limit: DEFAULT_LIMIT)
       @scores = scores.sort_by { |score| -score.crap }
-      @limit = limit
       @shown = limit.zero? ? @scores : @scores.first(limit)
     end
 
     def to_s
       return "No methods found.\n" if @scores.empty?
 
-      widths = column_widths
-      lines = [heading(widths), divider(widths), *@shown.map { |score| line(cells(score), widths) }]
+      rows = @shown.map { |score| cells(score) }
+      widths = column_widths(rows)
+      lines = [heading(widths), divider(widths), *rows.map { |row| line(row, widths) }]
       "#{(lines + footer).join("\n")}\n"
     end
 
@@ -43,9 +43,9 @@ module Swarf
 
     def scope(count) = (count == files.size) ? "every file" : "#{count} of #{files.size} files"
 
-    def unmeasured = files_reporting("no data")
+    def unmeasured = @unmeasured ||= files_reporting(CoverageMap::NO_DATA.evidence)
 
-    def stale = files_reporting("stale")
+    def stale = @stale ||= files_reporting(CoverageMap::STALE.evidence)
 
     def files_reporting(evidence)
       files.count { |methods| methods.all? { |score| score.evidence == evidence } }
@@ -55,8 +55,6 @@ module Swarf
       @files ||= @scores.group_by { |score| score.location.to_s.rpartition(":").first }.values
     end
 
-    def rows = @shown.map { |score| cells(score) }
-
     def cells(score)
       [score.name, score.cc.to_s, percentage(score.coverage), format("%.2f", score.crap),
         score.evidence.to_s, score.location.to_s]
@@ -64,13 +62,13 @@ module Swarf
 
     def percentage(coverage) = coverage.nil? ? "—" : format("%.1f%%", coverage * 100)
 
-    def column_widths
+    def column_widths(rows)
       ([HEADINGS] + rows).transpose.map { |column| column.map(&:length).max }
     end
 
     def heading(widths) = line(HEADINGS, widths)
 
-    def divider(widths) = widths.sum { |width| width + 2 }.then { |total| "-" * (total - 2) }
+    def divider(widths) = "-" * (widths.sum + 2 * (widths.size - 1))
 
     def line(cells, widths)
       cells.each_with_index.map do |cell, index|
