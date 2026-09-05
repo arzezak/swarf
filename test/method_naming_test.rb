@@ -17,7 +17,7 @@ class MethodNamingTest < Minitest::Test
 
   def test_leaving_a_singleton_block_restores_instance_naming
     assert_equal ["Cart.build", "Cart#total"],
-                 names("class Cart\n  class << self\n    def build = 1\n  end\n  def total = 1\nend\n")
+      names("class Cart\n  class << self\n    def build = 1\n  end\n  def total = 1\nend\n")
   end
 
   def test_nesting_is_joined_with_colons

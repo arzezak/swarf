@@ -4,7 +4,7 @@ require "digest"
 
 module Swarf
   class CoverageMap
-    Result = Struct.new(:coverage, :evidence, keyword_init: true)
+    Result = Struct.new(:coverage, :evidence)
 
     NO_DATA = Result.new(coverage: nil, evidence: "no data")
     STALE = Result.new(coverage: nil, evidence: "stale")

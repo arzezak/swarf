@@ -43,7 +43,7 @@ class ProbeTest < Minitest::Test
   def test_it_records_how_many_times_each_method_was_called
     run_probed
 
-    assert_equal({ "1" => 1, "7" => 0 }, coverage["methods"])
+    assert_equal({"1" => 1, "7" => 0}, coverage["methods"])
   end
 
   def test_separate_runs_accumulate
@@ -54,9 +54,9 @@ class ProbeTest < Minitest::Test
 
   def test_it_loads_nothing_else_before_coverage_starts
     lib = File.expand_path("../lib", __dir__)
-    output = IO.popen([{ "SWARF_DIR" => File.join(@root, ".swarf") }, RbConfig.ruby, "-I#{lib}",
-                       "-rswarf/probe", "-e", "puts Swarf.const_defined?(:Store)"],
-                      chdir: @root, err: %i[child out], &:read)
+    output = IO.popen([{"SWARF_DIR" => File.join(@root, ".swarf")}, RbConfig.ruby, "-I#{lib}",
+      "-rswarf/probe", "-e", "puts Swarf.const_defined?(:Store)"],
+      chdir: @root, err: %i[child out], &:read)
 
     assert_equal "false", output.strip
   end
@@ -74,8 +74,8 @@ class ProbeTest < Minitest::Test
 
   def run_probed(prelude: [])
     lib = File.expand_path("../lib", __dir__)
-    IO.popen([{ "SWARF_DIR" => File.join(@root, ".swarf") }, RbConfig.ruby, "-I#{lib}",
-              *prelude, "-rswarf/probe", script], chdir: @root, err: %i[child out], &:read)
+    IO.popen([{"SWARF_DIR" => File.join(@root, ".swarf")}, RbConfig.ruby, "-I#{lib}",
+      *prelude, "-rswarf/probe", script], chdir: @root, err: %i[child out], &:read)
   end
 
   def coverage

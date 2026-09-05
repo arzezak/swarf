@@ -15,7 +15,7 @@ class ReportTest < Minitest::Test
 
   def test_a_scored_method_shows_its_coverage_as_a_percentage
     assert_match(/Cart#shipping\s+4\s+50\.0%\s+6\.00/,
-                 render([row("Cart#shipping", cc: 4, coverage: 0.5, evidence: "1/2 br")]))
+      render([row("Cart#shipping", cc: 4, coverage: 0.5, evidence: "1/2 br")]))
   end
 
   def test_coverage_is_an_em_dash_when_there_is_no_data
@@ -58,7 +58,7 @@ class ReportTest < Minitest::Test
 
   def row(name, cc:, coverage: nil, evidence: "no data", location: "app/cart.rb:1")
     Swarf::Score.new(name: name, cc: cc, coverage: coverage, evidence: evidence,
-                     location: location)
+      location: location)
   end
 
   def render(scores, limit: Swarf::Report::DEFAULT_LIMIT)

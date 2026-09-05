@@ -17,7 +17,7 @@ module Swarf
 
     def self.ignore_file(root = Dir.pwd)
       File.readlines(File.join(root, IGNORE_FILE), chomp: true)
-          .map(&:strip).reject { |line| line.empty? || line.start_with?("#") }
+        .map(&:strip).reject { |line| line.empty? || line.start_with?("#") }
     rescue Errno::ENOENT
       []
     end
@@ -27,7 +27,7 @@ module Swarf
       raise Error, "no such file or directory: #{path}" unless File.directory?(path)
 
       Dir.glob(File.join(path, "**", "*.rb"))
-         .reject { |file| ignored?(file.delete_prefix("#{path}/"), ignore) }
+        .reject { |file| ignored?(file.delete_prefix("#{path}/"), ignore) }
     end
 
     def self.ignored?(relative, ignore)

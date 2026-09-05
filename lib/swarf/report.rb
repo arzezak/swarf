@@ -31,7 +31,7 @@ module Swarf
 
     def cells(score)
       [score.name, score.cc.to_s, percentage(score.coverage), format("%.2f", score.crap),
-       score.evidence.to_s, score.location.to_s]
+        score.evidence.to_s, score.location.to_s]
     end
 
     def percentage(coverage) = coverage.nil? ? "—" : format("%.1f%%", coverage * 100)
@@ -46,7 +46,7 @@ module Swarf
 
     def line(cells, widths)
       cells.each_with_index.map do |cell, index|
-        index.zero? || index == cells.size - 1 ? cell.ljust(widths[index]) : cell.rjust(widths[index])
+        (index.zero? || index == cells.size - 1) ? cell.ljust(widths[index]) : cell.rjust(widths[index])
       end.join("  ").rstrip
     end
   end

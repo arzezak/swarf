@@ -48,7 +48,7 @@ module Swarf
     def merge(merged, fresh)
       fresh.each do |file, entry|
         previous = merged[file]
-        merged[file] = previous && previous["sha"] == entry["sha"] ? combine(previous, entry) : entry
+        merged[file] = (previous && previous["sha"] == entry["sha"]) ? combine(previous, entry) : entry
       end
       merged
     end

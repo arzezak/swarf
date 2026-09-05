@@ -31,7 +31,7 @@ module Swarf
         Complexity.analyze(File.read(path), path: path).map do |method|
           found = coverage.for(method)
           Score.new(name: method.name, cc: method.cc, coverage: found.coverage,
-                    evidence: found.evidence, location: locate(method))
+            evidence: found.evidence, location: locate(method))
         end
       end
     end

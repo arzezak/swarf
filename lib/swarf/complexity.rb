@@ -4,7 +4,7 @@ require "prism"
 
 module Swarf
   module Complexity
-    Method = Struct.new(:path, :name, :cc, :start_line, :body, keyword_init: true) do
+    Method = Struct.new(:path, :name, :cc, :start_line, :body) do
       def range = start_line..(body&.last || start_line)
     end
 
@@ -43,7 +43,7 @@ module Swarf
 
       def visit_def_node(node)
         method = Method.new(path: @path, name: qualify(node), cc: 1,
-                            start_line: node.location.start_line, body: body_range(node))
+          start_line: node.location.start_line, body: body_range(node))
         @methods << method
         @stack.push(method)
         super
@@ -79,7 +79,7 @@ module Swarf
       end
 
       def qualify(node)
-        separator = node.receiver || @singleton.positive? ? "." : "#"
+        separator = (node.receiver || @singleton.positive?) ? "." : "#"
         return node.name.to_s if @scope.empty?
 
         "#{@scope.join("::")}#{separator}#{node.name}"
@@ -93,7 +93,7 @@ module Swarf
         return first..last if node.equal_loc
 
         clamped = [first, node.location.start_line + 1].max..[last, node.location.end_line - 1].min
-        clamped.begin > clamped.end ? first..last : clamped
+        (clamped.begin > clamped.end) ? first..last : clamped
       end
     end
   end

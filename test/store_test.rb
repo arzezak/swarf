@@ -20,39 +20,39 @@ class StoreTest < Minitest::Test
   end
 
   def test_a_relative_path_is_resolved_against_the_project_root
-    Dir.chdir(@root) { @store.record({ "lib/cart.rb" => { lines: [1] } }) }
+    Dir.chdir(@root) { @store.record({"lib/cart.rb" => {lines: [1]}}) }
 
     assert_equal [1], entry["lines"]
   end
 
   def test_it_ignores_files_outside_the_project
-    @store.record({ "/usr/lib/ruby/pp.rb" => { lines: [1] } })
+    @store.record({"/usr/lib/ruby/pp.rb" => {lines: [1]}})
 
     assert_empty @store.read
   end
 
   def test_branch_keys_become_stable_strings
-    @store.record(raw(branches: { [:if, 0, 2, 2, 2, 21] => { [:then, 1, 2, 2, 2, 12] => 0 } }))
+    @store.record(raw(branches: {[:if, 0, 2, 2, 2, 21] => {[:then, 1, 2, 2, 2, 12] => 0}}))
 
-    assert_equal({ "if:0:2:2:2:21" => { "then:1:2:2:2:12" => 0 } }, entry["branches"])
+    assert_equal({"if:0:2:2:2:21" => {"then:1:2:2:2:12" => 0}}, entry["branches"])
   end
 
   def test_method_keys_become_their_starting_line
-    @store.record(raw(methods: { [Object, :shipping, 1, 0, 5, 3] => 2 }))
+    @store.record(raw(methods: {[Object, :shipping, 1, 0, 5, 3] => 2}))
 
-    assert_equal({ "1" => 2 }, entry["methods"])
+    assert_equal({"1" => 2}, entry["methods"])
   end
 
   def test_two_runs_of_an_unchanged_file_add_up
-    @store.record(raw(lines: [1, 0, nil], methods: { [Object, :shipping, 1, 0, 5, 3] => 1 }))
-    @store.record(raw(lines: [1, 1, nil], methods: { [Object, :shipping, 1, 0, 5, 3] => 3 }))
+    @store.record(raw(lines: [1, 0, nil], methods: {[Object, :shipping, 1, 0, 5, 3] => 1}))
+    @store.record(raw(lines: [1, 1, nil], methods: {[Object, :shipping, 1, 0, 5, 3] => 3}))
 
     assert_equal [2, 1, nil], entry["lines"]
-    assert_equal({ "1" => 4 }, entry["methods"])
+    assert_equal({"1" => 4}, entry["methods"])
   end
 
   def test_branch_outcomes_add_up_across_runs
-    key = { [:if, 0, 2, 2, 2, 21] => { [:then, 1, 2, 2, 2, 12] => 1 } }
+    key = {[:if, 0, 2, 2, 2, 21] => {[:then, 1, 2, 2, 2, 12] => 1}}
     2.times { @store.record(raw(branches: key)) }
 
     assert_equal 2, entry["branches"]["if:0:2:2:2:21"]["then:1:2:2:2:12"]
@@ -72,7 +72,7 @@ class StoreTest < Minitest::Test
     pids = files.map do |file|
       fork do
         sleep([start - Time.now, 0].max)
-        @store.record({ file => { lines: [1] } })
+        @store.record({file => {lines: [1]}})
         exit!(0)
       end
     end
@@ -84,7 +84,7 @@ class StoreTest < Minitest::Test
   def test_it_survives_a_round_trip_through_disk
     @store.record(raw(lines: [1, nil]))
 
-    assert_equal({ "lines" => [1, nil] }, Swarf::Store.new(File.join(@root, ".swarf"), root: @root)
+    assert_equal({"lines" => [1, nil]}, Swarf::Store.new(File.join(@root, ".swarf"), root: @root)
                                                      .read[source].slice("lines"))
   end
 
@@ -102,7 +102,7 @@ class StoreTest < Minitest::Test
   end
 
   def raw(lines: [], branches: {}, methods: {})
-    { source => { lines: lines, branches: branches, methods: methods } }
+    {source => {lines: lines, branches: branches, methods: methods}}
   end
 
   def entry = @store.read.fetch(source)

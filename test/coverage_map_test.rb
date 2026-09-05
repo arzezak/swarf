@@ -21,7 +21,7 @@ class CoverageMapTest < Minitest::Test
 
   def test_a_file_edited_since_it_was_measured_reports_no_coverage_and_says_why
     write("def total = 1\n")
-    record(lines: [1], methods: { [Object, :total, 1, 0, 1, 13] => 1 })
+    record(lines: [1], methods: {[Object, :total, 1, 0, 1, 13] => 1})
     write("# edited\ndef total = 1\n")
 
     assert_nil result.coverage
@@ -30,7 +30,7 @@ class CoverageMapTest < Minitest::Test
 
   def test_a_method_nothing_called_scores_zero_however_its_lines_look
     write("def total = 1\n")
-    record(lines: [1], methods: { [Object, :total, 1, 0, 1, 13] => 0 })
+    record(lines: [1], methods: {[Object, :total, 1, 0, 1, 13] => 0})
 
     assert_in_delta 0.0, result.coverage
     assert_equal "never called", result.evidence
@@ -38,7 +38,7 @@ class CoverageMapTest < Minitest::Test
 
   def test_a_method_without_branches_falls_back_to_its_line_coverage
     write("def total\n  a = 1\n  b = 2\n  a + b\nend\n")
-    record(lines: [1, 1, 0, 0, nil], methods: { [Object, :total, 1, 0, 5, 3] => 1 })
+    record(lines: [1, 1, 0, 0, nil], methods: {[Object, :total, 1, 0, 5, 3] => 1})
 
     assert_in_delta(1.0 / 3, result.coverage)
     assert_equal "1/3 ln", result.evidence
@@ -47,9 +47,11 @@ class CoverageMapTest < Minitest::Test
   def test_a_guard_clause_taken_only_one_way_reports_half_by_branch_not_all_by_line
     write("def total(x)\n  return 0 if x.negative?\n\n  x\nend\n")
     record(lines: [1, 1, nil, 1, nil],
-           branches: { [:if, 0, 2, 2, 2, 25] => { [:then, 1, 2, 12, 2, 13] => 0,
-                                                  [:else, 2, 2, 2, 2, 25] => 1 } },
-           methods: { [Object, :total, 1, 0, 5, 3] => 1 })
+      branches: {[:if, 0, 2, 2, 2, 25] => {
+        [:then, 1, 2, 12, 2, 13] => 0,
+        [:else, 2, 2, 2, 2, 25] => 1
+      }},
+      methods: {[Object, :total, 1, 0, 5, 3] => 1})
 
     assert_in_delta 0.5, result.coverage
     assert_equal "1/2 br", result.evidence
@@ -58,9 +60,8 @@ class CoverageMapTest < Minitest::Test
   def test_a_branch_on_an_endless_def_still_belongs_to_that_method
     write("def pick(x) = x ? 1 : 2\n")
     record(lines: [1],
-           branches: { [:if, 0, 1, 14, 1, 23] => { [:then, 1, 1, 18, 1, 19] => 2,
-                                                   [:else, 2, 1, 22, 1, 23] => 1 } },
-           methods: { [Object, :pick, 1, 0, 1, 23] => 3 })
+      branches: {[:if, 0, 1, 14, 1, 23] => {[:then, 1, 1, 18, 1, 19] => 2, [:else, 2, 1, 22, 1, 23] => 1}},
+      methods: {[Object, :pick, 1, 0, 1, 23] => 3})
 
     assert_in_delta 1.0, result.coverage
     assert_equal "2/2 br", result.evidence
@@ -68,7 +69,7 @@ class CoverageMapTest < Minitest::Test
 
   def test_an_empty_method_that_ran_has_nothing_left_to_cover
     write("def noop\nend\n")
-    record(lines: [1, nil], methods: { [Object, :noop, 1, 0, 2, 3] => 1 })
+    record(lines: [1, nil], methods: {[Object, :noop, 1, 0, 2, 3] => 1})
 
     assert_in_delta 1.0, result.coverage
     assert_equal "no body", result.evidence
@@ -81,7 +82,7 @@ class CoverageMapTest < Minitest::Test
   def write(body) = File.write(source, body)
 
   def record(lines: [], branches: {}, methods: {})
-    @store.record({ source => { lines: lines, branches: branches, methods: methods } })
+    @store.record({source => {lines: lines, branches: branches, methods: methods}})
   end
 
   def result(name: nil)

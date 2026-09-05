@@ -14,9 +14,10 @@ module Swarf
 
   # CRAP(m) = CC(m)^2 * (1 - coverage(m))^3 + CC(m)
   #
-  # Complexity is squared; the *uncovered* fraction is cubed. The score is nearly flat
-  # near full coverage and violently steep near zero, so simple code and small gaps stay
-  # quiet while complex code nothing has run scores loudly.
+  # Complexity is squared; the *uncovered* fraction is cubed. The score is
+  # nearly flat near full coverage and violently steep near zero, so simple
+  # code and small gaps stay quiet while complex code nothing has run scores
+  # loudly.
   def self.crap(complexity, coverage)
     (complexity**2) * ((1.0 - coverage)**3) + complexity
   end
