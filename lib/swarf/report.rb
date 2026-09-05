@@ -24,9 +24,6 @@ module Swarf
 
     def held_back = @scores.size - @shown.size
 
-    # Notes the reader can act on, each named for the move it asks for. Kept out of the
-    # rows because the action is per file, not per method: a project nothing has run is
-    # one sentence, not one row per method.
     def footer
       notes = []
       notes << "… #{held_back} more (--limit 0 for all)" if held_back.positive?
