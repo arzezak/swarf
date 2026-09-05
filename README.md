@@ -58,6 +58,8 @@ Cart#checkout    6     —  42.00   no data  lib/cart.rb:31
 Cart#discount    4     —  20.00   no data  lib/cart.rb:24
 Cart#shipping    3     —  12.00   no data  lib/cart.rb:15
 Cart#subtotal    1     —   2.00   no data  lib/cart.rb:11
+
+No coverage recorded for every file — run your suite with swarf/probe loaded.
 ```
 
 `no data` means no test run has been recorded yet, so every method reports `CC² + CC`.
@@ -157,6 +159,17 @@ The evidence column is the actionable half:
 | `stale`        | the file changed since it was measured      | re-run your suite                    |
 
 Both `no data` and `stale` fall back to the `CRAP = CC² + CC` floor rather than guessing.
+
+Those two also print under the table, counted by file, because the fix is per file rather
+than per method:
+
+```
+… 45 more (--limit 0 for all)
+No coverage recorded for 3 of 11 files — run your suite with swarf/probe loaded.
+2 of 11 files changed after measurement — re-run your suite.
+```
+
+A fully measured project prints neither line.
 
 ## Command line
 

@@ -1,0 +1,4 @@
+# The probe starts Coverage itself, so it is loaded before measurement begins and can
+# never appear in the store. Both spellings are here because patterns match relative to
+# the directory scanned: `swarf` sees lib/swarf/probe.rb, `swarf lib/` sees swarf/probe.rb.
+**/swarf/probe.rb

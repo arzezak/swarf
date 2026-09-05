@@ -50,6 +50,45 @@ class ReportTest < Minitest::Test
     refute_match(/more/, render([row("Cart#shipping", cc: 3)]))
   end
 
+  def test_it_says_which_files_no_test_run_has_measured
+    scores = [row("Cart#a", cc: 1, location: "app/cart.rb:1"),
+      row("Cart#b", cc: 1, location: "app/cart.rb:9"),
+      row("Order#a", cc: 1, coverage: 1.0, evidence: "1/1 ln", location: "app/order.rb:1")]
+
+    assert_match(/No coverage recorded for 1 of 2 files — run your suite with swarf\/probe loaded\./,
+      render(scores))
+  end
+
+  def test_it_says_which_files_changed_since_they_were_measured
+    scores = [row("Cart#a", cc: 1, evidence: "stale", location: "app/cart.rb:1"),
+      row("Order#a", cc: 1, coverage: 1.0, evidence: "1/1 ln", location: "app/order.rb:1")]
+
+    assert_match(/1 of 2 files changed after measurement — re-run your suite\./, render(scores))
+  end
+
+  def test_unmeasured_and_stale_files_are_counted_apart
+    scores = [row("Cart#a", cc: 1, location: "app/cart.rb:1"),
+      row("Order#a", cc: 1, evidence: "stale", location: "app/order.rb:1")]
+    output = render(scores)
+
+    assert_match(/No coverage recorded for 1 of 2 files/, output)
+    assert_match(/1 of 2 files changed after measurement/, output)
+  end
+
+  def test_a_measured_file_is_never_mentioned_in_the_footer
+    scores = [row("Cart#a", cc: 1, coverage: 0.0, evidence: "never called", location: "app/cart.rb:1"),
+      row("Order#a", cc: 1, coverage: 1.0, evidence: "1/1 ln", location: "app/order.rb:1")]
+    output = render(scores)
+
+    refute_match(/No coverage recorded/, output)
+    refute_match(/changed after measurement/, output)
+  end
+
+  def test_a_project_nothing_has_run_is_named_as_a_whole
+    assert_match(/No coverage recorded for every file — run your suite/,
+      render([row("Cart#a", cc: 1), row("Order#a", cc: 1, location: "app/order.rb:1")]))
+  end
+
   def test_an_empty_run_says_so_instead_of_printing_a_bare_header
     assert_match(/no methods found/i, render([]))
   end
