@@ -2,6 +2,7 @@
 
 require_relative "swarf/version"
 require_relative "swarf/complexity"
+require_relative "swarf/measurement"
 require_relative "swarf/store"
 require_relative "swarf/coverage_map"
 require_relative "swarf/score"

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "digest"
-
 module Swarf
   class CoverageMap
     Result = Struct.new(:coverage, :evidence)
@@ -16,37 +14,27 @@ module Swarf
     end
 
     def for(method)
-      entry = @data[method.path]
-      return NO_DATA if entry.nil?
-      return STALE unless current?(method.path, entry)
-      return NEVER_CALLED if never_called?(method, entry)
+      measurement = @data[method.path]
+      return NO_DATA if measurement.nil?
+      return STALE unless measurement.current?
+      return NEVER_CALLED if measurement.calls(method.start_line)&.zero?
 
-      branch_coverage(method, entry) || line_coverage(method, entry) || NO_BODY
+      branch_coverage(measurement, method) || line_coverage(measurement, method) || NO_BODY
     end
 
     private
 
-    def current?(path, entry)
-      File.file?(path) && Digest::SHA256.file(path).hexdigest == entry["sha"]
-    end
-
-    def never_called?(method, entry)
-      entry["methods"][method.start_line.to_s]&.zero?
-    end
-
-    def branch_coverage(method, entry)
-      outcomes = entry["branches"].filter_map do |branch, taken|
-        taken.values if method.range.cover?(branch.split(":")[2].to_i)
-      end.flatten
+    def branch_coverage(measurement, method)
+      outcomes = measurement.branches(method.range)
       return nil if outcomes.empty?
 
       ratio(outcomes.count(&:positive?), outcomes.size, "br")
     end
 
-    def line_coverage(method, entry)
+    def line_coverage(measurement, method)
       return nil unless method.body
 
-      hits = method.body.filter_map { |line| entry["lines"][line - 1] }
+      hits = measurement.lines(method.body)
       return nil if hits.empty?
 
       ratio(hits.count(&:positive?), hits.size, "ln")

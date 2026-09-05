@@ -16,7 +16,7 @@ module Swarf
     end
 
     def read
-      parse(File.read(path))
+      parse(File.read(path)).to_h { |file, entry| [file, Measurement.new(file, entry)] }
     rescue Errno::ENOENT
       {}
     end
