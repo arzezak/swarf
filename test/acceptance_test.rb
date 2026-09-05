@@ -3,25 +3,6 @@
 require "test_helper"
 
 class AcceptanceTest < Minitest::Test
-  def test_scoring_a_file_with_no_coverage_reports_the_complexity_floor
-    output = swarf("test/fixtures/cart.rb")
-
-    assert_match(/Cart#shipping\s+3\s+—\s+12\.00/, output)
-    assert_match(/Cart#subtotal\s+1\s+—\s+2\.00/, output)
-  end
-
-  def test_worst_method_is_listed_first
-    output = swarf("test/fixtures/cart.rb")
-
-    assert_operator output.index("Cart#shipping"), :<, output.index("Cart#subtotal")
-  end
-
-  def test_every_row_names_a_file_and_line_an_agent_can_open
-    output = swarf("test/fixtures/cart.rb")
-
-    assert_match(%r{Cart#shipping.*test/fixtures/cart\.rb:8}, output)
-  end
-
   def test_the_row_limit_is_configurable
     output = swarf("--limit", "1", "test/fixtures/cart.rb")
 

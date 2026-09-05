@@ -19,31 +19,17 @@ module Swarf
     end
 
     def run(out, _err)
+      scores = Scan.new(paths: @paths, ignore: ignore).scores
       out.print Report.new(scores, limit: @limit).to_s
       0
     end
 
     private
 
-    def scores
-      coverage = CoverageMap.new(Store.new.read)
-      Sources.collect(@paths, ignore: ignore).flat_map do |path|
-        Complexity.analyze(File.read(path), path: path).map do |method|
-          found = coverage.for(method)
-          Score.new(name: method.name, cc: method.cc, coverage: found.coverage,
-            evidence: found.evidence, location: locate(method))
-        end
-      end
-    end
-
     def ignore
       return [] if @all
 
       Sources::DEFAULT_IGNORE + Sources.ignore_file + @extra_ignore
-    end
-
-    def locate(method)
-      "#{method.path.delete_prefix("#{Dir.pwd}/")}:#{method.start_line}"
     end
 
     def parse(argv)
