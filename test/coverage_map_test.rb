@@ -19,8 +19,6 @@ class CoverageMapTest < Minitest::Test
     assert_equal "no data", result.evidence
   end
 
-  # Coverage is indexed by line number, so numbers recorded against different bytes are
-  # not merely old, they are misattributed. Report the CC floor rather than a wrong figure.
   def test_a_file_edited_since_it_was_measured_reports_no_coverage_and_says_why
     write("def total = 1\n")
     record(lines: [1], methods: { [Object, :total, 1, 0, 1, 13] => 1 })
@@ -30,7 +28,6 @@ class CoverageMapTest < Minitest::Test
     assert_equal "stale", result.evidence
   end
 
-  # A `def` line runs when the file loads, so line coverage alone calls this method tested.
   def test_a_method_nothing_called_scores_zero_however_its_lines_look
     write("def total = 1\n")
     record(lines: [1], methods: { [Object, :total, 1, 0, 1, 13] => 0 })
@@ -47,8 +44,6 @@ class CoverageMapTest < Minitest::Test
     assert_equal "1/3 ln", result.evidence
   end
 
-  # The reason branches are preferred: this method reads 100% by line and 50% by branch,
-  # and the untested half is exactly where the complexity is.
   def test_a_guard_clause_taken_only_one_way_reports_half_by_branch_not_all_by_line
     write("def total(x)\n  return 0 if x.negative?\n\n  x\nend\n")
     record(lines: [1, 1, nil, 1, nil],

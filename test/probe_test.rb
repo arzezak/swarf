@@ -4,7 +4,6 @@ require "test_helper"
 
 class ProbeTest < Minitest::Test
   def setup
-    # Coverage reports real paths; macOS hands out a symlinked tmpdir.
     @root = File.realpath(Dir.mktmpdir)
     File.write(script, <<~RUBY)
       def used(x)
@@ -41,7 +40,6 @@ class ProbeTest < Minitest::Test
     assert_equal [0, 1], taken.sort
   end
 
-  # The fact a whole test suite cannot otherwise tell you: nothing ever called this.
   def test_it_records_how_many_times_each_method_was_called
     run_probed
 
@@ -54,8 +52,6 @@ class ProbeTest < Minitest::Test
     assert_equal 2, coverage["methods"]["1"]
   end
 
-  # Coverage only sees files loaded after it starts, so the probe must not drag the rest
-  # of swarf in ahead of it — that would leave swarf's own code unmeasurable.
   def test_it_loads_nothing_else_before_coverage_starts
     lib = File.expand_path("../lib", __dir__)
     output = IO.popen([{ "SWARF_DIR" => File.join(@root, ".swarf") }, RbConfig.ruby, "-I#{lib}",
@@ -65,8 +61,6 @@ class ProbeTest < Minitest::Test
     assert_equal "false", output.strip
   end
 
-  # SimpleCov gets there first in most projects, and Ruby allows only one Coverage.start
-  # per process. Warn and carry on rather than taking the suite down.
   def test_it_warns_instead_of_raising_when_coverage_is_already_running
     File.write(File.join(@root, "other_tool.rb"), "require 'coverage'\nCoverage.start\n")
     output = run_probed(prelude: ["-I#{@root}", "-rother_tool"])

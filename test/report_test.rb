@@ -26,14 +26,10 @@ class ReportTest < Minitest::Test
     assert_match(/never called/, render([row("Cart#x", cc: 1, coverage: 0.0, evidence: "never called")]))
   end
 
-  # An agent reading `Cart#checkout` has to grep for it before it can act. Naming the
-  # file and line makes every row directly openable.
   def test_each_row_names_the_file_and_line_the_method_starts_on
     assert_match(%r{app/cart\.rb:42}, render([row("Cart#shipping", cc: 3, location: "app/cart.rb:42")]))
   end
 
-  # A 245-file project reports 344 methods. Handing an agent all of them buries the few
-  # that matter and burns the context it needs to fix them.
   def test_it_shows_only_the_worst_rows_by_default
     scores = Array.new(30) { |i| row("Cart#m#{i}", cc: i + 1) }
 

@@ -5,10 +5,6 @@ require "digest"
 require "fileutils"
 
 module Swarf
-  # The coverage database: `.swarf/coverage.json`.
-  #
-  # Ruby's Coverage result is keyed by arrays holding live Class objects, which do not
-  # survive JSON, so everything is flattened to strings on the way in.
   class Store
     FILENAME = "coverage.json"
 
@@ -25,11 +21,6 @@ module Swarf
       {}
     end
 
-    # Merges one Coverage result into whatever previous runs left behind.
-    #
-    # Rails parallelises by forking, so a dozen processes can reach this at once, each
-    # holding a slice of the same suite. The whole read-merge-write is therefore done
-    # under an exclusive lock; without it the last writer wins and the rest is lost.
     def record(result)
       fresh = normalize(result)
       return if fresh.empty?
@@ -64,8 +55,6 @@ module Swarf
 
     def normalize(result)
       result.filter_map do |file, coverage|
-        # `ruby cart.rb` makes Coverage report "cart.rb"; the runner always works in
-        # absolute paths, so resolve here and store one shape only.
         file = File.expand_path(file, @root)
         next unless project_file?(file)
 
@@ -78,7 +67,6 @@ module Swarf
       end.to_h
     end
 
-    # A test run measures every gem and stdlib file it loads. None of that is your code.
     def project_file?(file)
       file.start_with?("#{@root}/") && File.file?(file)
     end
@@ -89,7 +77,6 @@ module Swarf
       end
     end
 
-    # The class object does not survive JSON, and the runner joins on a method's first line.
     def stringify_methods(methods)
       methods.each_with_object(Hash.new(0)) do |((_owner, _name, line, *), count), totals|
         totals[line.to_s] += count
@@ -104,7 +91,6 @@ module Swarf
       )
     end
 
-    # A nil entry means "not executable" and stays nil however many runs pass over it.
     def sum_lines(previous, fresh)
       fresh.each_with_index.map do |hits, index|
         hits.nil? ? nil : hits + (previous[index] || 0)

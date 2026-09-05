@@ -3,7 +3,6 @@
 require "optparse"
 
 module Swarf
-  # `swarf [options] [paths]`
   class CLI
     def self.run(argv, out: $stdout, err: $stderr)
       new(argv).run(out, err)
@@ -43,7 +42,6 @@ module Swarf
       Sources::DEFAULT_IGNORE + Sources.ignore_file + @extra_ignore
     end
 
-    # Relative to where you ran swarf, so the row can be pasted straight into an editor.
     def locate(method)
       "#{method.path.delete_prefix("#{Dir.pwd}/")}:#{method.start_line}"
     end

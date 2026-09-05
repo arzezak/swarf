@@ -3,11 +3,8 @@
 require "prism"
 
 module Swarf
-  # Cyclomatic complexity per method, parsed from source text.
   module Complexity
     Method = Struct.new(:path, :name, :cc, :start_line, :body, keyword_init: true) do
-      # Branches are attributed over the whole definition, because an endless method holds
-      # its branches on the `def` line itself.
       def range = start_line..(body&.last || start_line)
     end
 
@@ -53,8 +50,6 @@ module Swarf
         @stack.pop
       end
 
-      # Blocks are deliberately absent: `rows.each { ... }` is iteration, not a decision,
-      # and counting it inflates declarative DSL code without finding real risk.
       DECISIONS = %i[
         if unless while until for when in rescue rescue_modifier and or
       ].freeze
@@ -73,7 +68,6 @@ module Swarf
 
       private
 
-      # Decisions outside any method body belong to no method, so they are dropped.
       def decision
         @stack.last&.cc += 1
       end
@@ -91,8 +85,6 @@ module Swarf
         "#{@scope.join("::")}#{separator}#{node.name}"
       end
 
-      # The `def` line executes when the class is defined, so it reads as covered even for a
-      # method nothing ever calls. Only an endless method genuinely lives on its `def` line.
       def body_range(node)
         return nil unless node.body
 
@@ -100,9 +92,7 @@ module Swarf
         last = node.body.location.end_line
         return first..last if node.equal_loc
 
-        # An implicit `begin`/`rescue` claims the whole `def`, keyword lines included.
         clamped = [first, node.location.start_line + 1].max..[last, node.location.end_line - 1].min
-        # ...but a one-liner shares its lines with those keywords, so clamping empties it.
         clamped.begin > clamped.end ? first..last : clamped
       end
     end

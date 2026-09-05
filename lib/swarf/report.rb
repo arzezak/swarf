@@ -1,12 +1,9 @@
 # frozen_string_literal: true
 
 module Swarf
-  # A fixed-width table, worst first.
   class Report
     HEADINGS = ["Method", "CC", "Cov%", "CRAP", "Evidence", "Location"].freeze
 
-    # A whole project reports hundreds of methods and only the head of that list is worth
-    # anyone's attention — an agent's context least of all.
     DEFAULT_LIMIT = 20
 
     def initialize(scores, limit: DEFAULT_LIMIT)
@@ -47,7 +44,6 @@ module Swarf
 
     def divider(widths) = widths.sum { |width| width + 2 }.then { |total| "-" * (total - 2) }
 
-    # The name and the location are left-aligned; numbers read better flush right.
     def line(cells, widths)
       cells.each_with_index.map do |cell, index|
         index.zero? || index == cells.size - 1 ? cell.ljust(widths[index]) : cell.rjust(widths[index])

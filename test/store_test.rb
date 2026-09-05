@@ -19,14 +19,12 @@ class StoreTest < Minitest::Test
     assert_equal [1, 1, nil, 0, nil], entry["lines"]
   end
 
-  # `ruby cart.rb` makes Coverage report "cart.rb", not its full path.
   def test_a_relative_path_is_resolved_against_the_project_root
     Dir.chdir(@root) { @store.record({ "lib/cart.rb" => { lines: [1] } }) }
 
     assert_equal [1], entry["lines"]
   end
 
-  # A test run measures every gem and stdlib file it loads; none of that is your code.
   def test_it_ignores_files_outside_the_project
     @store.record({ "/usr/lib/ruby/pp.rb" => { lines: [1] } })
 
@@ -39,8 +37,6 @@ class StoreTest < Minitest::Test
     assert_equal({ "if:0:2:2:2:21" => { "then:1:2:2:2:12" => 0 } }, entry["branches"])
   end
 
-  # The class object in a Coverage method key does not survive JSON, and the runner joins
-  # on the line a method starts at anyway.
   def test_method_keys_become_their_starting_line
     @store.record(raw(methods: { [Object, :shipping, 1, 0, 5, 3] => 2 }))
 
@@ -62,9 +58,6 @@ class StoreTest < Minitest::Test
     assert_equal 2, entry["branches"]["if:0:2:2:2:21"]["then:1:2:2:2:12"]
   end
 
-  # Coverage is indexed by line number. Insert a method at the top of a file and every line
-  # below it shifts while the counters stay put, so blending old with new is worse than
-  # dropping the old outright: it reads as confidently correct and is wrong.
   def test_an_edited_file_replaces_its_old_coverage_instead_of_blending
     @store.record(raw(lines: [1, 1, nil, 1, nil]))
     write_source("# a new first line\ndef shipping(t)\n  t\nend\n")
@@ -73,8 +66,6 @@ class StoreTest < Minitest::Test
     assert_equal [0, 0, nil, nil], entry["lines"]
   end
 
-  # Rails parallelises tests by forking, so a dozen processes can finish at once and each
-  # merges into the same file. Without locking they overwrite each other's records.
   def test_concurrent_writers_do_not_lose_each_others_records
     files = Array.new(8) { |i| File.join(@root, "lib", "f#{i}.rb").tap { |f| File.write(f, "def m; end\n") } }
     start = Time.now + 0.3

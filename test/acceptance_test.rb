@@ -65,7 +65,6 @@ class AcceptanceTest < Minitest::Test
     probe(dir, "cart.rb")
     output = swarf("cart.rb", chdir: dir, swarf_dir: File.join(dir, ".swarf"))
 
-    # The guard was only ever taken one way, and nothing called `refund` at all.
     assert_match(/Cart#refund\s+1\s+0\.0%\s+2\.00\s+never called/, output)
     assert_match(%r{Cart#shipping\s+2\s+50\.0%\s+2\.50\s+1/2 br}, output)
   end

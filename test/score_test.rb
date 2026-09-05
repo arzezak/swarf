@@ -19,7 +19,6 @@ class ScoreTest < Minitest::Test
     assert_in_delta 1.0, Swarf.crap(1, 1.0)
   end
 
-  # (1 - coverage)^3 is never negative, so complexity is a hard floor on the score.
   def test_complexity_is_a_floor_no_coverage_can_go_under
     (1..30).each do |cc|
       assert_operator Swarf.crap(cc, 1.0), :>=, cc

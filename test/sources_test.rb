@@ -25,7 +25,6 @@ class SourcesTest < Minitest::Test
     assert_equal [path("lib/cart.rb"), path("lib/shop/item.rb")], collect(path("lib"))
   end
 
-  # Test files are where coverage comes from, not where risk lives.
   def test_test_and_vendor_directories_are_skipped
     write("lib/cart.rb")
     write("test/cart_test.rb")
@@ -35,8 +34,6 @@ class SourcesTest < Minitest::Test
     assert_equal [path("lib/cart.rb")], collect(@dir)
   end
 
-  # Migrations are generated, run once, and never tested. On a well-tested app they are
-  # the only untested code left, so they take over the top of the report.
   def test_migrations_and_schema_are_skipped
     write("app/cart.rb")
     write("db/migrate/20260101_create_carts.rb")
@@ -58,8 +55,6 @@ class SourcesTest < Minitest::Test
     assert_equal [path("test/cart_test.rb")], collect(path("test/cart_test.rb"))
   end
 
-  # Patterns match relative to the root being scanned, so naming a skipped directory makes
-  # its contents top-level and nothing can match them.
   def test_an_explicit_directory_overrides_its_own_exclusion
     write("db/migrate/20260101_create_carts.rb")
 

@@ -3,8 +3,6 @@
 require "test_helper"
 
 class BodyRangeTest < Minitest::Test
-  # The `def` line runs when the class is defined, so it is marked covered even for a
-  # method no test ever calls. Including it makes an untested method look partly tested.
   def test_the_def_line_is_excluded_from_the_body
     assert_equal 3..4, body(<<~RUBY)
       # comment
@@ -29,8 +27,6 @@ class BodyRangeTest < Minitest::Test
     RUBY
   end
 
-  # `def total; 1; end` has body, `def` and `end` all on line 1, so clamping the line away
-  # would leave an empty range and the body would read as covered-by-default.
   def test_a_body_sharing_a_line_with_its_keywords_keeps_that_line
     assert_equal 1..1, body("def total; 1; end\n")
     assert_equal 2..2, body("def total\n  1; end\n")

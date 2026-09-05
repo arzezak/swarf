@@ -3,12 +3,6 @@
 require "digest"
 
 module Swarf
-  # Answers "how well covered is this method?" against what the probe recorded.
-  #
-  # Branch coverage is preferred wherever a method has branches. Ruby puts a decision on a
-  # line that runs whichever way the decision goes, so `return 0 if x.negative?` reads 100%
-  # by line even when the guard never fires — maximally wrong exactly where risk collects.
-  # Methods with no branches fall back to lines, where "did it run" is the whole truth.
   class CoverageMap
     Result = Struct.new(:coverage, :evidence, keyword_init: true)
 
@@ -36,7 +30,6 @@ module Swarf
       File.file?(path) && Digest::SHA256.file(path).hexdigest == entry["sha"]
     end
 
-    # A call count is a fact, not an estimate: if the method never ran, nothing in it did.
     def never_called?(method, entry)
       entry["methods"][method.start_line.to_s]&.zero?
     end
