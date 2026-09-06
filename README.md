@@ -1,6 +1,10 @@
 # swarf
 
-Scores every Ruby method by how complex it is against how well your tests actually exercise it.
+Ask an agent to improve a codebase and it will keep going. There is always another name to argue with, another method to rearrange, and nothing in the loop that says when the returns have run out. We bikeshed the same way; the difference is that the agent bills you for it.
+
+The CRAP score is one way out. It folds test coverage into complexity instead of measuring complexity alone: complexity sets the floor, and coverage is the only thing that brings the number down. So a hairy method the tests cover well scores as low as it can and drops off the list, while an untested one stays at the top. That ordering is the signal — it says which code is actually worth spending tokens on.
+
+swarf scores every method in a Ruby or Rails codebase this way, worst first.
 
 ```
 $ swarf lib/
@@ -26,11 +30,9 @@ Complexity is squared; the _uncovered_ fraction is cubed. Two identities explain
 | 100%     | `CC`       | fully tested code is only as risky as it is complex |
 | 0%       | `CC² + CC` | untested complexity grows quadratically             |
 
-The curve is nearly flat near full coverage and steep near zero: simple code and small
-gaps stay quiet, complex code nobody has run scores loudly.
+The curve is nearly flat near full coverage and steep near zero: simple code and small gaps stay quiet, complex code nobody has run scores loudly.
 
-From Alberto Savoia and Bob Evans (2007), where it stood for _Change Risk Analysis and
-Prediction_; Robert C. Martin's ports expand it as _Change Risk Anti-Pattern_. Same formula.
+From Alberto Savoia and Bob Evans (2007), where it stood for _Change Risk Analysis and Prediction_; Robert C. Martin's ports expand it as _Change Risk Anti-Pattern_. Same formula.
 
 ## Install
 
@@ -62,9 +64,7 @@ Cart#subtotal    1     —   2.00   no data  lib/cart.rb:11
 No coverage recorded for every file — run your suite with swarf/probe loaded.
 ```
 
-`no data` means no test run has been recorded yet, so every method reports `CC² + CC`.
-That is the correct score for code nothing has run. Adding coverage can only ever pull a
-number _down_, toward `CC`.
+`no data` means no test run has been recorded yet, so every method reports `CC² + CC`. That is the correct score for code nothing has run. Adding coverage can only ever pull a number _down_, toward `CC`.
 
 ### 2. Record coverage — one line
 
@@ -90,8 +90,7 @@ Minitest::TestTask.create do |t|
 end
 ```
 
-**Rails** — in `test/test_helper.rb`, above `config/environment`, or the whole app loads
-before the probe does and none of it is measured:
+**Rails** — in `test/test_helper.rb`, above `config/environment`, or the whole app loads before the probe does and none of it is measured:
 
 ```ruby
 ENV["RAILS_ENV"] ||= "test"
@@ -102,9 +101,7 @@ require "swarf/probe"
 require_relative "../config/environment"
 ```
 
-`bundler/setup` is only what `config/boot` would do anyway; the probe needs it to find the
-gem this early. Rails parallelises tests by forking, which swarf handles — every worker
-merges into the store under a lock.
+`bundler/setup` is only what `config/boot` would do anyway; the probe needs it to find the gem this early. Rails parallelises tests by forking, which swarf handles — every worker merges into the store under a lock.
 
 **Anything else** — set it on the command line, no files to edit:
 
@@ -112,8 +109,7 @@ merges into the store under a lock.
 $ RUBYOPT="-rswarf/probe" bundle exec rake test
 ```
 
-`Coverage` measures only files loaded _after_ it starts. Put the probe under your
-application and the application is invisible to it.
+`Coverage` measures only files loaded _after_ it starts. Put the probe under your application and the application is invisible to it.
 
 Then ignore the store:
 
@@ -136,8 +132,7 @@ Cart#shipping    3   66.7%   3.33        2/3 br  lib/cart.rb:15
 Cart#subtotal    1  100.0%   1.00        1/1 ln  lib/cart.rb:11
 ```
 
-Every run merges into `.swarf/coverage.json`, so partial runs are fine — running one spec
-file does not erase what another proved. Your runs, CI's runs and a colleague's all add up.
+Every run merges into `.swarf/coverage.json`, so partial runs are fine — running one spec file does not erase what another proved. Your runs, CI's runs and a colleague's all add up.
 
 ## Reading the report
 
@@ -160,8 +155,7 @@ The evidence column tells you what to do next:
 
 Both `no data` and `stale` fall back to the `CRAP = CC² + CC` floor rather than guessing.
 
-Those two also print under the table, counted by file, because the fix is per file rather
-than per method:
+Those two also print under the table, counted by file, because the fix is per file rather than per method:
 
 ```
 … 45 more (--limit 0 for all)
@@ -185,9 +179,7 @@ $ swarf --version
 $ swarf --help
 ```
 
-Only the worst 20 rows print by default, with a count of what was held back. A 245-file
-project reports 344 methods, and the tail of that list is all `CRAP 1.00` — noise that
-buries the handful of rows worth acting on.
+Only the worst 20 rows print by default, with a count of what was held back. A 245-file project reports 344 methods, and the tail of that list is all `CRAP 1.00` — noise that buries the handful of rows worth acting on.
 
 ## What gets skipped
 
@@ -197,9 +189,7 @@ db/**                                      migrations and schema
 **/vendor/**  **/tmp/**  **/log/**  **/node_modules/**
 ```
 
-Migrations matter more than they look. They are generated, run once and never tested, so
-on a well-tested codebase they are the only untested code left and they take over the top
-of the report — on a 20-file Rails app they ranked 3rd, 4th and 5th.
+Migrations matter more than they look. They are generated, run once and never tested, so on a well-tested codebase they are the only untested code left and they take over the top of the report — on a 20-file Rails app they ranked 3rd, 4th and 5th.
 
 Add your own in `.swarfignore` at the project root, one glob per line:
 
@@ -209,12 +199,9 @@ lib/api/generated_client.rb
 app/legacy/**
 ```
 
-Patterns match against each file's path relative to the directory being scanned, and both
-`*` and `**` cross directories. Naming a path on the command line always wins, so
-`swarf db/migrate` scores migrations even though `db/**` is a default.
+Patterns match against each file's path relative to the directory being scanned, and both `*` and `**` cross directories. Naming a path on the command line always wins, so `swarf db/migrate` scores migrations even though `db/**` is a default.
 
-Directories are searched for `**/*.rb`, skipping `test/`, `spec/`, `vendor/`, `tmp/` and
-`node_modules/`. Naming one of those directly still scores it.
+Directories are searched for `**/*.rb`, skipping `test/`, `spec/`, `vendor/`, `tmp/` and `node_modules/`. Naming one of those directly still scores it.
 
 `SWARF_DIR` moves the coverage store, which both the probe and the runner must agree on:
 
@@ -241,50 +228,30 @@ flowchart LR
     Score --> Report["report, worst first"]
 ```
 
-The probe is twenty lines: `Coverage.start` plus an `at_exit` that dumps the result.
-The runner never loads your application — it parses text.
+The probe is twenty lines: `Coverage.start` plus an `at_exit` that dumps the result. The runner never loads your application — it parses text.
 
 ## Things worth knowing
 
-**Any run counts, not just specs.** A rake task, booting the app or a script all record
-coverage; nothing static can tell you whether a line executed.
+**Any run counts, not just specs.** A rake task, booting the app or a script all record coverage; nothing static can tell you whether a line executed.
 
-**swarf and SimpleCov cannot both run.** Ruby permits one `Coverage.start` per process. If
-SimpleCov gets there first, swarf warns and records nothing rather than killing your suite.
+**swarf and SimpleCov cannot both run.** Ruby permits one `Coverage.start` per process. If SimpleCov gets there first, swarf warns and records nothing rather than killing your suite.
 
-**Branch coverage is preferred, with a line fallback.** Ruby puts a decision on a line that
-runs whichever way the decision goes, so `return 0 if x.negative?` reads 100% by line even
-when the guard never fires — wrong exactly where risk collects. Methods with no branches
-fall back to lines, where "did it run" is the whole truth.
+**Branch coverage is preferred, with a line fallback.** Ruby puts a decision on a line that runs whichever way the decision goes, so `return 0 if x.negative?` reads 100% by line even when the guard never fires — wrong exactly where risk collects. Methods with no branches fall back to lines, where "did it run" is the whole truth.
 
-**`never called` comes from a VM-level call count.** It tells you to _write_ a test;
-`3/6 br` tells you to _extend_ one. A bare `0.0%` tells you neither.
+**`never called` comes from a VM-level call count.** It tells you to _write_ a test; `3/6 br` tells you to _extend_ one. A bare `0.0%` tells you neither.
 
-**Edited files report `no coverage`, not stale numbers.** Coverage is indexed by line
-number, so inserting a method at the top of a file shifts every line below it while the
-counters stay put. swarf stores a SHA-256 per measured file and drops entries whose bytes
-changed, because stale coverage is confidently wrong.
+**Edited files report `no coverage`, not stale numbers.** Coverage is indexed by line number, so inserting a method at the top of a file shifts every line below it while the counters stay put. swarf stores a SHA-256 per measured file and drops entries whose bytes changed, because stale coverage is confidently wrong.
 
-**swarf's CC will not match RuboCop's.** It counts `if`, `unless`, `while`, `until`, `for`,
-each `when`, each `in`, each `rescue`, `&&`, `||` and `&.` — **not blocks**. Six chained
-`add_option` blocks are not six decisions. The trade-off is that CC largely ignores
-iteration, since Ruby iterates with blocks.
+**swarf's CC will not match RuboCop's.** It counts `if`, `unless`, `while`, `until`, `for`, each `when`, each `in`, each `rescue`, `&&`, `||` and `&.` — **not blocks**. Six chained `add_option` blocks are not six decisions. The trade-off is that CC largely ignores iteration, since Ruby iterates with blocks.
 
-**There is no threshold and nothing fails.** swarf sorts worst-first and prints. Because
-`CRAP = CC` at full coverage, a fixed threshold is a complexity cap in disguise — a method
-at CC 9 can never score under 9 however well you test it, and the only remaining move is to
-split it. Ranking is enough; capping complexity is RuboCop's job.
+**There is no threshold and nothing fails.** swarf sorts worst-first and prints. Because `CRAP = CC` at full coverage, a fixed threshold is a complexity cap in disguise — a method at CC 9 can never score under 9 however well you test it, and the only remaining move is to split it. Ranking is enough; capping complexity is RuboCop's job.
 
 ## Known limitations
 
-- Methods defined inside a `Struct.new do ... end` block take the enclosing module's name
-  (`Swarf#crap` rather than `Swarf::Score#crap`), because the block is not a class node.
-- `define_method` and other dynamically defined methods are not seen at all — swarf reads
-  `def`.
-- Nested `def`s get their own complexity, but the outer method's coverage still counts the
-  inner method's lines and branches.
-- Methods inside `class << self` are named correctly; methods defined by `instance_eval` or
-  a reopened singleton via a variable are not.
+- Methods defined inside a `Struct.new do ... end` block take the enclosing module's name (`Swarf#crap` rather than `Swarf::Score#crap`), because the block is not a class node.
+- `define_method` and other dynamically defined methods are not seen at all — swarf reads `def`.
+- Nested `def`s get their own complexity, but the outer method's coverage still counts the inner method's lines and branches.
+- Methods inside `class << self` are named correctly; methods defined by `instance_eval` or a reopened singleton via a variable are not.
 
 ## Development
 
