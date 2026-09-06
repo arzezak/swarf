@@ -26,8 +26,8 @@ Complexity is squared; the _uncovered_ fraction is cubed. Two identities explain
 | 100%     | `CC`       | fully tested code is only as risky as it is complex |
 | 0%       | `CC² + CC` | untested complexity grows quadratically             |
 
-The curve is nearly flat near full coverage and violently steep near zero, which is the
-point: simple code and small gaps stay quiet, complex code nobody has run scores loudly.
+The curve is nearly flat near full coverage and steep near zero: simple code and small
+gaps stay quiet, complex code nobody has run scores loudly.
 
 From Alberto Savoia and Bob Evans (2007), where it stood for _Change Risk Analysis and
 Prediction_; Robert C. Martin's ports expand it as _Change Risk Anti-Pattern_. Same formula.
@@ -63,8 +63,8 @@ No coverage recorded for every file — run your suite with swarf/probe loaded.
 ```
 
 `no data` means no test run has been recorded yet, so every method reports `CC² + CC`.
-That is not a placeholder — it is the correct score for code nothing has run. Adding
-coverage can only ever pull a number _down_, toward `CC`.
+That is the correct score for code nothing has run. Adding coverage can only ever pull a
+number _down_, toward `CC`.
 
 ### 2. Record coverage — one line
 
@@ -112,8 +112,8 @@ merges into the store under a lock.
 $ RUBYOPT="-rswarf/probe" bundle exec rake test
 ```
 
-Order matters and is not negotiable: `Coverage` measures only files loaded _after_ it
-starts. Put the probe under your application and the application is invisible to it.
+`Coverage` measures only files loaded _after_ it starts. Put the probe under your
+application and the application is invisible to it.
 
 Then ignore the store:
 
@@ -148,7 +148,7 @@ file does not erase what another proved. Your runs, CI's runs and a colleague's 
 | `CRAP`     | the score; worst first                                            |
 | `Evidence` | where the coverage number came from, so you know what to do next  |
 
-The evidence column is the actionable half:
+The evidence column tells you what to do next:
 
 | evidence       | what it means                               | what to do                           |
 | -------------- | ------------------------------------------- | ------------------------------------ |
@@ -241,33 +241,29 @@ flowchart LR
     Score --> Report["report, worst first"]
 ```
 
-The probe is about thirty lines: `Coverage.start` plus an `at_exit` that dumps the result.
+The probe is twenty lines: `Coverage.start` plus an `at_exit` that dumps the result.
 The runner never loads your application — it parses text.
 
 ## Things worth knowing
 
-**Coverage needs a run; complexity does not.** Nothing static can tell you whether a line
-executed. Any run counts, not just specs — a rake task, booting the app, a script.
-
-**The probe must load first.** `Coverage` only measures files loaded after it starts. Put
-it ahead of your application, or the application is invisible to it.
+**Any run counts, not just specs.** A rake task, booting the app or a script all record
+coverage; nothing static can tell you whether a line executed.
 
 **swarf and SimpleCov cannot both run.** Ruby permits one `Coverage.start` per process. If
 SimpleCov gets there first, swarf warns and records nothing rather than killing your suite.
 
 **Branch coverage is preferred, with a line fallback.** Ruby puts a decision on a line that
 runs whichever way the decision goes, so `return 0 if x.negative?` reads 100% by line even
-when the guard never fires — maximally wrong exactly where risk collects. Methods with no
-branches fall back to lines, where "did it run" is the whole truth.
+when the guard never fires — wrong exactly where risk collects. Methods with no branches
+fall back to lines, where "did it run" is the whole truth.
 
-**`never called` is a fact, not an inference.** It comes from a VM-level call count. It
-tells you to _write_ a test; `3/6 br` tells you to _extend_ one. A bare `0.0%` tells you
-neither.
+**`never called` comes from a VM-level call count.** It tells you to _write_ a test;
+`3/6 br` tells you to _extend_ one. A bare `0.0%` tells you neither.
 
 **Edited files report `no coverage`, not stale numbers.** Coverage is indexed by line
 number, so inserting a method at the top of a file shifts every line below it while the
 counters stay put. swarf stores a SHA-256 per measured file and drops entries whose bytes
-changed, because stale coverage is worse than none — it is confidently wrong.
+changed, because stale coverage is confidently wrong.
 
 **swarf's CC will not match RuboCop's.** It counts `if`, `unless`, `while`, `until`, `for`,
 each `when`, each `in`, each `rescue`, `&&`, `||` and `&.` — **not blocks**. Six chained
