@@ -45,6 +45,16 @@ gem "swarf", group: :development
 $ bundle install
 ```
 
+Working with Claude Code? Install the skill that teaches it the loop below, so it scores
+the files it touched and writes the test the top row asks for:
+
+```
+$ bundle exec swarf init
+```
+
+That writes `.claude/skills/swarf/` and adds `.swarf/` to `.gitignore`. Commit both.
+Run it again after upgrading the gem to refresh the skill.
+
 ## Getting started
 
 ### 1. Score complexity — no setup at all
@@ -175,6 +185,7 @@ $ swarf --limit 50                  # show 50 rows instead of 20
 $ swarf --limit 0                   # show everything
 $ swarf --ignore "app/legacy/**"    # skip a path (repeatable)
 $ swarf --all                       # score everything, ignoring nothing
+$ swarf init                        # install the Claude Code skill, ignore .swarf/
 $ swarf --version
 $ swarf --help
 ```

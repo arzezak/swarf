@@ -4,4 +4,8 @@
 
 require "swarf"
 
-exit Swarf::CLI.run(ARGV)
+begin
+  Swarf::CLI.run(ARGV)
+rescue Swarf::Error => e
+  abort "swarf: #{e.message}"
+end

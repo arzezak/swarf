@@ -9,6 +9,7 @@ require_relative "swarf/score"
 require_relative "swarf/report"
 require_relative "swarf/sources"
 require_relative "swarf/scan"
+require_relative "swarf/init"
 require_relative "swarf/cli"
 
 module Swarf

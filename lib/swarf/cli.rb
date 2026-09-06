@@ -4,11 +4,8 @@ require "optparse"
 
 module Swarf
   class CLI
-    def self.run(argv, out: $stdout, err: $stderr)
-      new(argv).run(out)
-    rescue Error => e
-      err.puts("swarf: #{e.message}")
-      1
+    def self.run(argv, out: $stdout)
+      (argv == ["init"]) ? Init.new.run(out) : new(argv).run(out)
     end
 
     def initialize(argv)
@@ -21,7 +18,6 @@ module Swarf
     def run(out)
       scores = Scan.new(paths: @paths, ignore: ignore).scores
       out.print Report.new(scores, limit: @limit).to_s
-      0
     end
 
     private
@@ -34,7 +30,10 @@ module Swarf
 
     def parse(argv)
       parser = OptionParser.new do |opts|
-        opts.banner = "Usage: swarf [options] [paths]"
+        opts.banner = <<~USAGE
+          Usage: swarf [options] [paths]
+                 swarf init    Install the Claude Code skill and ignore .swarf/
+        USAGE
         opts.on("-n", "--limit N", Integer, "Rows to show (0 for all, default #{Report::DEFAULT_LIMIT})") do |n|
           @limit = n
         end
