@@ -168,13 +168,13 @@ A fully measured project prints neither line.
 ## Command line
 
 ```
-$ swarf                       # the whole project
-$ swarf lib/ app/             # directories, recursively
-$ swarf lib/app/cart.rb       # a single file
-$ swarf --limit 50            # show 50 rows instead of 20
-$ swarf --limit 0             # show everything
-$ swarf --ignore "app/legacy/**"   # skip a path (repeatable)
-$ swarf --all                 # score everything, ignoring nothing
+$ swarf                             # the whole project
+$ swarf lib/ app/                   # directories, recursively
+$ swarf lib/app/cart.rb             # a single file
+$ swarf --limit 50                  # show 50 rows instead of 20
+$ swarf --limit 0                   # show everything
+$ swarf --ignore "app/legacy/**"    # skip a path (repeatable)
+$ swarf --all                       # score everything, ignoring nothing
 $ swarf --version
 $ swarf --help
 ```
