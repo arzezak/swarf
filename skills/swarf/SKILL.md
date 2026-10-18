@@ -60,6 +60,8 @@ The probe must load before the code under test, because `Coverage` only sees fil
 
 Add `.swarf/` to `.gitignore`. Runs merge, so a single spec file adds to what earlier runs proved; nothing is erased until the file's bytes change.
 
+On Ruby 4.0.2+ the probe sets `DISABLE_BOOTSNAP_COMPILE_CACHE=1`. If a boot still dies with `should not compile with coverage`, something started `Coverage` before `swarf/probe` did.
+
 Do not run swarf's probe alongside SimpleCov. Ruby allows one `Coverage.start` per process; if SimpleCov started first, swarf warns and records nothing.
 
 ## Commands

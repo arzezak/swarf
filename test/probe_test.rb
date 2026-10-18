@@ -66,6 +66,16 @@ class ProbeTest < Minitest::Test
     assert_match(/swarf.*already/i, output)
   end
 
+  def test_an_app_that_dumps_instruction_sequences_at_boot_still_boots_under_the_probe
+    File.write(script, <<~RUBY)
+      RubyVM::InstructionSequence.compile("").to_binary unless ENV["DISABLE_BOOTSNAP_COMPILE_CACHE"]
+      puts "booted"
+    RUBY
+    output = run_probed
+
+    assert_equal "booted", output.strip
+  end
+
   private
 
   def script = File.join(@root, "script.rb")

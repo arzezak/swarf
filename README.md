@@ -239,11 +239,13 @@ flowchart LR
     Score --> Report["report, worst first"]
 ```
 
-The probe is twenty lines: `Coverage.start` plus an `at_exit` that dumps the result. The runner never loads your application — it parses text.
+The probe is `Coverage.start` plus an `at_exit` that dumps the result. The runner never loads your application — it parses text.
 
 ## Things worth knowing
 
 **Any run counts, not just specs.** A rake task, booting the app or a script all record coverage; nothing static can tell you whether a line executed.
+
+**Bootsnap loses its compile cache under the probe.** Ruby 4.0.2 and later refuse to dump an instruction sequence while coverage is being measured, and bootsnap dumps one as it loads — with the probe first, `bootsnap/setup` would kill the boot. On those Rubies the probe sets `DISABLE_BOOTSNAP_COMPILE_CACHE=1` before bootsnap loads. The load path cache stays on, so boot is only a little slower.
 
 **swarf and SimpleCov cannot both run.** Ruby permits one `Coverage.start` per process. If SimpleCov gets there first, swarf warns and records nothing rather than killing your suite.
 
