@@ -65,6 +65,31 @@ class CoverageMapTest < Minitest::Test
     assert_equal "2/2 br", found.evidence
   end
 
+  def test_a_rescue_counts_the_body_that_ran_as_a_taken_outcome
+    write("def execute\n  run\nrescue StandardError => e\n  raise e if loud?\n  report(e)\nend\n")
+    found = result(lines: [1, 3, nil, 0, 0, nil],
+      branches: {"if:0:4:2:4:18" => {"then:1:4:2:4:9" => 0, "else:2:4:2:4:18" => 0}},
+      methods: {"1" => 3})
+
+    assert_in_delta 0.25, found.coverage
+    assert_equal "1/4 br", found.evidence
+  end
+
+  def test_a_rescue_whose_handler_ran_counts_both_outcomes
+    write("def execute\n  run\nrescue\n  report\nend\n")
+    found = result(lines: [1, 3, nil, 1, nil], methods: {"1" => 3})
+
+    assert_in_delta 1.0, found.coverage
+    assert_equal "2/2 br", found.evidence
+  end
+
+  def test_each_rescue_clause_adds_one_outcome_beside_the_body
+    write("def execute\n  run\nrescue A\n  one\nrescue B\n  two\nend\n")
+    found = result(lines: [1, 3, nil, 0, nil, 1, nil], methods: {"1" => 3})
+
+    assert_equal "2/3 br", found.evidence
+  end
+
   def test_a_method_with_no_recorded_call_count_is_scored_rather_than_called_never_called
     write("def total\n  1\nend\n")
     found = result(lines: [1, 1, nil])

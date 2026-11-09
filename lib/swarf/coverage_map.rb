@@ -25,10 +25,15 @@ module Swarf
     private
 
     def branch_coverage(measurement, method)
-      outcomes = measurement.branches(method.range)
+      outcomes = measurement.branches(method.range) + rescue_outcomes(measurement, method)
       return nil if outcomes.empty?
 
       ratio(outcomes.count(&:positive?), outcomes.size, "br")
+    end
+
+    # Coverage records no branch for rescue, though Complexity counts one.
+    def rescue_outcomes(measurement, method)
+      method.rescues.flat_map { |line| measurement.lines(line..line) }
     end
 
     def line_coverage(measurement, method)
