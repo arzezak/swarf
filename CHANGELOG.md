@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.1 — 2026-11-09
 
 - The probe no longer kills the boot of apps using bootsnap on Ruby 4.0.2+, where
   dumping an instruction sequence under coverage raises. It sets
