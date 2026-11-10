@@ -54,7 +54,8 @@ A `never called` on a method a test clearly exercises means the test ran without
 The probe must load before the code under test, because `Coverage` only sees files loaded after it starts. One line, placed first:
 
 - **RSpec**: first line of `.rspec`: `--require swarf/probe`
-- **Minitest**: first line of `test/test_helper.rb`: `require "swarf/probe"`
+- **Minitest via Rake** (`Minitest::TestTask`): in the `Rakefile`, `t.test_prelude = 'require "swarf/probe"'` inside `Minitest::TestTask.create`. Not in `test_helper.rb`: the task loads `minitest/autorun` first, so the probe records before any test runs and every method reports `never called`.
+- **Minitest without Rake** (`ruby -Itest ...`): first line of `test/test_helper.rb`: `require "swarf/probe"`
 - **Rails**: in `test/test_helper.rb`, after `require "bundler/setup"` and before `require_relative "../config/environment"`. Below the environment require, the whole app is invisible to it.
 - **Anything**: `RUBYOPT="-rswarf/probe" bundle exec rake test`
 
