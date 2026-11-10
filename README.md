@@ -86,19 +86,21 @@ Load the probe **before anything else** in your test runs.
 --require swarf/probe
 ```
 
-**Minitest** — the very first line of `test/test_helper.rb`, above `minitest/autorun`:
-
-```ruby
-require "swarf/probe"
-```
-
-**Minitest via Rake** — in the `Rakefile`. `test_prelude` runs before the tests load:
+**Minitest via Rake** — if `rake test` runs your suite through `Minitest::TestTask`, in the `Rakefile`. `test_prelude` runs before the tests load:
 
 ```ruby
 Minitest::TestTask.create do |t|
   t.test_prelude = 'require "swarf/probe"'
 end
 ```
+
+**Minitest without Rake** — if you run tests directly, as in `ruby -Itest test/foo_test.rb`, the very first line of `test/test_helper.rb`, above `minitest/autorun`:
+
+```ruby
+require "swarf/probe"
+```
+
+This does not work under `rake test`. `Minitest::TestTask` requires `minitest/autorun` before any test file loads `test_helper`, and `at_exit` hooks run in reverse order, so the probe records before Minitest has run a single test and every method reports `never called`. Use `test_prelude` there.
 
 **Rails** — in `test/test_helper.rb`, above `config/environment`, or the whole app loads before the probe does and none of it is measured:
 
